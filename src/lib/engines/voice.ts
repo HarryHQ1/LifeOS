@@ -10,18 +10,18 @@ interface VoiceEngineState {
   error: string | null;
 }
 
-let recognitionInstance: SpeechRecognition | null = null;
+let recognitionInstance: any | null = null;
 
 export function initVoiceEngine(): VoiceEngineState {
   if (typeof window === "undefined") {
     return { isListening: false, isSpeaking: false, lastTranscript: "", error: "Server-side" };
   }
   const SpeechRecognitionAPI =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
+    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
   if (!SpeechRecognitionAPI) {
     return { isListening: false, isSpeaking: false, lastTranscript: "", error: "Not supported" };
   }
-  recognitionInstance = new SpeechRecognitionAPI();
+  recognitionInstance = new (SpeechRecognitionAPI as any)();
   recognitionInstance.continuous = false;
   recognitionInstance.interimResults = true;
   recognitionInstance.lang = "en-US";
@@ -33,11 +33,11 @@ export function startListening(
   onError: (err: string) => void
 ): void {
   if (!recognitionInstance) { onError("Not initialized"); return; }
-  recognitionInstance.onresult = (event) => {
+  recognitionInstance.onresult = (event: any) => {
     const last = event.results[event.results.length - 1];
     if (last.isFinal) onResult(last[0].transcript);
   };
-  recognitionInstance.onerror = (event) => onError(event.error);
+  recognitionInstance.onerror = (event: any) => onError(event.error);
   try { recognitionInstance.start(); } catch { /* already started */ }
 }
 
